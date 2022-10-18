@@ -9,6 +9,31 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:name="com.google.android.gms.maps.SupportMapFragment"
+        xmlns:map="http://schemas.android.com/apk/res-auto"
+        map:mapId="@string/map_id"
+        map:uiZoomControls="true"
+        map:cameraTilt="30"
+        map:cameraZoom="13"
+        map:mapType="normal"
+        map:uiCompass="false"
+        map:uiRotateGestures="true"
+        map:uiScrollGestures="true"
+        map:uiZoomGestures="true"
         android:id="@+id/map"/>
+    <androidx.appcompat.widget.SearchView
+        android:id="@+id/search_view"
+        android:layout_width="match_parent"
+        android:layout_height="44dp"
+        android:layout_marginStart="30dp"
+        android:layout_marginEnd="30dp"
+        android:layout_marginTop="30dp"
+        android:iconifiedByDefault='false'
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        android:background="@drawable/shape_search"
+        android:focusable="false"
+        android:theme="@style/Widget.SearchView"
+        app:queryHint="@string/txt_search" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -10,6 +10,8 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Looper
 import android.util.Log
+import android.widget.Toast
+import androidx.appcompat.widget.SearchView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.google.android.gms.location.*
@@ -18,6 +20,17 @@ import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
+import com.mapurr.com.api.ApiManager
+import com.mapurr.com.model.PlaceInfoEntry
+import com.mapurr.com.model.PlaceResultEntry
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import retrofit2.Retrofit
+
+//import com.google.android.gms.maps.MapsInitializer
+//import com.google.android.gms.maps.MapsInitializer.Renderer
+//import com.google.android.gms.maps.OnMapsSdkInitializedCallback
 
 class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     //定位client
@@ -26,29 +39,106 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     private var map:GoogleMap? = null
 
     private var currentLocation : Location? = null
+    private var mapCenter : LatLng? = null
     //当前定位marker点
     private var currentMarker: Marker? = null
+    private var searchView: androidx.appcompat.widget.SearchView? = null
+    private var searchResults = mutableListOf<PlaceInfoEntry>()
 
     val REQUEST_PHOTO_CODE = 3002 //获取权限
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+//        MapsInitializer.initialize(applicationContext, Renderer.LATEST, this)
         setContentView(R.layout.activity_main);
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this)
         val mapFragment : SupportMapFragment = supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
+        searchView = findViewById<SearchView>(R.id.search_view)
+        searchView?.apply {
+            onActionViewExpanded()
+            setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+                override fun onQueryTextSubmit(query: String?): Boolean {
+                    if (!query.isNullOrEmpty()) {
+
+                        if (currentLocation != null)
+                            searchLocations(query, currentLocation!!.latitude, currentLocation!!.longitude)
+                        else if (mapCenter != null)
+                            searchLocations(query, mapCenter!!.latitude, mapCenter!!.longitude)
+                    }
+                    return false
+                }
+
+                override fun onQueryTextChange(newText: String?): Boolean {
+                    return false
+                }
+
+            })
+        }
     }
+
+    private  fun searchLocations(keyword: String, latitude: Double, longitude: Double) {
+        val apiKey = resources.getString(R.string.google_map_key)
+        val radius = 3000
+        val location = "$latitude,$longitude"
+        ApiManager.getHttpApi().getPlaces(keyword, location, apiKey, radius).enqueue(object : Callback<PlaceResultEntry<Array<PlaceInfoEntry>>> {
+
+            override fun onResponse(
+                call: Call<PlaceResultEntry<Array<PlaceInfoEntry>>>?,
+                response: Response<PlaceResultEntry<Array<PlaceInfoEntry>>>?
+            ) {
+                if (response == null) {
+                    return
+                }
+                if (response.isSuccessful && response.body() != null) {
+                    var result: PlaceResultEntry<Array<PlaceInfoEntry>> = response.body()
+                    if (result.status.equals("OK")) {
+                        searchResults.clear()
+                        searchResults.addAll(result.results!!.toList())
+//                        jokeAdapter!!.notifyDataSetChanged()
+                    } else {
+                        Toast.makeText(this@MainActivity, "Network Error", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+
+            override fun onFailure(
+                call: Call<PlaceResultEntry<Array<PlaceInfoEntry>>>?,
+                t: Throwable?
+            ) {
+                Toast.makeText(this@MainActivity, "Network Error", Toast.LENGTH_SHORT).show()
+            }
+        })
+    }
+
+
+//    override fun onMapsSdkInitialized(renderer: MapsInitializer.Renderer) {
+//        when (renderer) {
+//            Renderer.LATEST -> Log.d("MapsDemo", "The latest version of the renderer is used.")
+//            Renderer.LEGACY -> Log.d("MapsDemo", "The legacy version of the renderer is used.")
+//        }
+//    }
 
     @SuppressLint("MissingPermission")
     override fun onMapReady(googleMap: GoogleMap) {
         map = googleMap
-        googleMap.mapType = GoogleMap.MAP_TYPE_HYBRID
+        googleMap.mapType = GoogleMap.MAP_TYPE_NORMAL
+        val currencyLatLng = LatLng(36.659584, 117.144005)
+        googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currencyLatLng, 16f))
+        //获取地图中心位置
+        googleMap.setOnCameraMoveListener {
+            with(googleMap.cameraPosition.target){
+                Log.e("地图中心位置","Lat：$latitude，Lng：$longitude")
+                mapCenter = googleMap.cameraPosition.target
+            }
+        }
 
         val permission = arrayOf(
             Manifest.permission.ACCESS_FINE_LOCATION,
             Manifest.permission.ACCESS_COARSE_LOCATION
         )
         requestPermission(permission, REQUEST_PHOTO_CODE)
-        googleMap.isIndoorEnabled = true
+//        googleMap.isIndoorEnabled = true
+        googleMap.isBuildingsEnabled = true
     }
 
     @SuppressLint("MissingPermission")
@@ -63,7 +153,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     //定位回调
     private val locationCallback = object : LocationCallback(){
         override fun onLocationResult(locationResult: LocationResult) {
-            for (location in locationResult.locations){
+            var location = locationResult.locations.first()
+            if (location != null) {
                 drawLocationMarker(location, LatLng(location.latitude,location.longitude))
             }
         }

@@ -6,11 +6,11 @@ import android.content.pm.PackageManager
 import android.location.Geocoder
 import android.location.Location
 import android.os.Build
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Looper
 import android.util.Log
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -26,7 +26,7 @@ import com.mapurr.com.model.PlaceResultEntry
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
-import retrofit2.Retrofit
+
 
 //import com.google.android.gms.maps.MapsInitializer
 //import com.google.android.gms.maps.MapsInitializer.Renderer
@@ -49,7 +49,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 //        MapsInitializer.initialize(applicationContext, Renderer.LATEST, this)
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_main)
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this)
         val mapFragment : SupportMapFragment = supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
@@ -94,6 +94,10 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                     if (result.status.equals("OK")) {
                         searchResults.clear()
                         searchResults.addAll(result.results!!.toList())
+                        map!!.clear()
+                        for (place in searchResults) {
+                            addMarker(place)
+                        }
 //                        jokeAdapter!!.notifyDataSetChanged()
                     } else {
                         Toast.makeText(this@MainActivity, "Network Error", Toast.LENGTH_SHORT).show()
@@ -158,6 +162,17 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                 drawLocationMarker(location, LatLng(location.latitude,location.longitude))
             }
         }
+    }
+
+    private fun addMarker(place: PlaceInfoEntry) {
+        if (place.geometry == null || place.geometry!!.location == null)
+            return
+        map?.addMarker(
+            MarkerOptions().position(LatLng(place.geometry!!.location!!.lat.toDouble(),
+                place.geometry!!.location!!.lng.toDouble()
+            )).title(place.name)
+//                .icon(BitmapDescriptorFactory.fromResource(R.drawable.chat_loc_point))
+        )
     }
 
     @SuppressLint("NewApi")

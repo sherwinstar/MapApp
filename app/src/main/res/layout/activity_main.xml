@@ -27,12 +27,11 @@
         android:layout_marginStart="30dp"
         android:layout_marginEnd="30dp"
         android:layout_marginTop="30dp"
-        android:iconifiedByDefault='false'
+        android:iconifiedByDefault='true'
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         android:background="@drawable/shape_search"
-        android:focusable="false"
         android:theme="@style/Widget.SearchView"
         app:queryHint="@string/txt_search" />
 

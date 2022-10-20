@@ -2,5 +2,5 @@
     <string name="app_name">Mapurr</string>
     <string name="google_map_key">AIzaSyDjDSFh4fIjakS6TDu3tpkHeVWMeF72NDY</string>
     <string name="map_id">3f39d80104495bc0</string>
-    <string name="txt_search">Search Locations</string>
+    <string name="txt_search">Search</string>
 </resources>

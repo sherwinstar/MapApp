@@ -6,6 +6,6 @@ data class PlaceInfoEntry(
     var name: String? = null,
     var place_id: String? = null,
     var business_status: String? = null,
-    var rating: Int? = null,
+    var rating: Float? = null,
     var geometry: Geometry? = null
 )

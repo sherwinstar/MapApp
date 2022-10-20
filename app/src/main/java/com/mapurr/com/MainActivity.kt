@@ -1,7 +1,9 @@
 package com.mapurr.com
 
+
 import android.Manifest
 import android.annotation.SuppressLint
+import android.content.Context
 import android.content.pm.PackageManager
 import android.location.Geocoder
 import android.location.Location
@@ -9,16 +11,15 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Looper
 import android.util.Log
+import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.google.android.gms.location.*
-import com.google.android.gms.maps.CameraUpdateFactory
-import com.google.android.gms.maps.GoogleMap
-import com.google.android.gms.maps.OnMapReadyCallback
-import com.google.android.gms.maps.SupportMapFragment
+import com.google.android.gms.maps.*
+import com.google.android.gms.maps.MapsInitializer.Renderer
 import com.google.android.gms.maps.model.*
 import com.mapurr.com.api.ApiManager
 import com.mapurr.com.model.PlaceInfoEntry
@@ -28,11 +29,7 @@ import retrofit2.Callback
 import retrofit2.Response
 
 
-//import com.google.android.gms.maps.MapsInitializer
-//import com.google.android.gms.maps.MapsInitializer.Renderer
-//import com.google.android.gms.maps.OnMapsSdkInitializedCallback
-
-class MainActivity : AppCompatActivity(), OnMapReadyCallback {
+class MainActivity : AppCompatActivity(), OnMapReadyCallback, OnMapsSdkInitializedCallback {
     //定位client
     private lateinit var fusedLocationProviderClient: FusedLocationProviderClient
 
@@ -48,18 +45,21 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     val REQUEST_PHOTO_CODE = 3002 //获取权限
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-//        MapsInitializer.initialize(applicationContext, Renderer.LATEST, this)
+        MapsInitializer.initialize(applicationContext, Renderer.LATEST, this)
         setContentView(R.layout.activity_main)
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this)
         val mapFragment : SupportMapFragment = supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
         searchView = findViewById<SearchView>(R.id.search_view)
+        searchView?.clearFocus()
+        searchView?.onActionViewExpanded()
+        val imm = searchView?.context?.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.hideSoftInputFromWindow(searchView?.windowToken, 0)
         searchView?.apply {
             onActionViewExpanded()
             setOnQueryTextListener(object : SearchView.OnQueryTextListener {
                 override fun onQueryTextSubmit(query: String?): Boolean {
                     if (!query.isNullOrEmpty()) {
-
                         if (currentLocation != null)
                             searchLocations(query, currentLocation!!.latitude, currentLocation!!.longitude)
                         else if (mapCenter != null)
@@ -115,12 +115,12 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
 
-//    override fun onMapsSdkInitialized(renderer: MapsInitializer.Renderer) {
-//        when (renderer) {
-//            Renderer.LATEST -> Log.d("MapsDemo", "The latest version of the renderer is used.")
-//            Renderer.LEGACY -> Log.d("MapsDemo", "The legacy version of the renderer is used.")
-//        }
-//    }
+    override fun onMapsSdkInitialized(renderer: MapsInitializer.Renderer) {
+        when (renderer) {
+            Renderer.LATEST -> Log.d("MapsDemo", "The latest version of the renderer is used.")
+            Renderer.LEGACY -> Log.d("MapsDemo", "The legacy version of the renderer is used.")
+        }
+    }
 
     @SuppressLint("MissingPermission")
     override fun onMapReady(googleMap: GoogleMap) {

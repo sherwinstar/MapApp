@@ -76,7 +76,7 @@ dependencies {
 
     //maps
     //好像这个playservice和map使用需要target指定31+，还有min的制定
-    implementation 'com.google.android.gms:play-services-maps:18.0.2'
+    implementation 'com.google.android.gms:play-services-maps:18.1.0'
     implementation 'com.google.android.gms:play-services-location:19.0.1'
 
     implementation 'com.squareup.okhttp3:okhttp:3.11.0'
